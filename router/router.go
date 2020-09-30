@@ -22,8 +22,10 @@ func SetupRouter() *gin.Engine {
 
 		auth := api.Group("/auth", middleware.AuthSessionMiddle())
 		{
-			auth.GET("/whoami")
+			auth.GET("/userPrivs", controller.UserPrivs)
+			auth.GET("/userinfo", controller.GetUserInfo)
 			auth.GET("/login", controller.Login)
+			auth.GET("/logout", controller.Logout)
 		}
 	}
 	return g

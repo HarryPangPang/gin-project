@@ -40,6 +40,7 @@ const (
 	accessToken  TokenType = 2 //获取用户名，权限
 )
 
+// 登陆
 func Login(c *gin.Context) {
 	code := c.Query("code")
 	respBody := code2token(code)
@@ -60,6 +61,46 @@ func Login(c *gin.Context) {
 		"code": 0,
 		"msg":  "登陆成功",
 		"data": nil,
+	})
+}
+
+// 登出
+func Logout(c *gin.Context) {
+	session := sessions.Default(c)
+	session.Clear()
+	session.Save()
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"msg":  "退出成功",
+		"data": nil,
+	})
+}
+
+// 用户权限
+func UserPrivs(c *gin.Context) {
+	session := sessions.Default(c)
+	accessToken := session.Get("AccessToken").(string)
+	userPrivs := getUserPrivs(accessToken)
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"msg":  "退出成功",
+		"data": userPrivs,
+	})
+}
+
+// 用户信息
+func GetUserInfo(c *gin.Context) {
+	session := sessions.Default(c)
+	userinfo := make(map[string]string)
+	userinfo["wxId"] = session.Get("wxId").(string)
+	userinfo["name"] = session.Get("name").(string)
+	userinfo["mobile"] = session.Get("mobile").(string)
+	userinfo["email"] = session.Get("email").(string)
+	userinfo["avatar"] = session.Get("avatar").(string)
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"msg":  "获取用户信息",
+		"data": userinfo,
 	})
 }
 
@@ -131,4 +172,21 @@ func refreshCode2token(refreshToken string) Code2tokenRes {
 	var code2tokenRes Code2tokenRes
 	json.Unmarshal([]byte(string(content)), &code2tokenRes)
 	return code2tokenRes
+}
+
+// 获取菜单权限
+func getUserPrivs(accessToken string) []interface{} {
+	serverUrl := setting.Conf().WeixinOauth.ServerUrl
+	url := serverUrl + "/api/oauth/user/privs" + getSignedQuery(accessToken, 2)
+	resp, err := http.Get(url)
+	if err != nil {
+		errors.Wrap(err, "请求/oauth/user/privs失败")
+	}
+	content, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		errors.Wrap(err, "getUserPrivs读取失败")
+	}
+	res := helper.String2Map(string(content))
+	data := res["data"].([]interface{})
+	return data
 }
