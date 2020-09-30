@@ -10,7 +10,6 @@ import (
 func SetupRouter() *gin.Engine {
 	g := gin.New()
 	g.Use(middleware.LoggerToFile())
-
 	g.GET("/ping", controller.Test)
 
 	api := g.Group("/api", middleware.EnableCookieSession())
@@ -24,6 +23,7 @@ func SetupRouter() *gin.Engine {
 		auth := api.Group("/auth", middleware.AuthSessionMiddle())
 		{
 			auth.GET("/whoami")
+			auth.GET("/login", controller.Login)
 		}
 	}
 	return g

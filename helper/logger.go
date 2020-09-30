@@ -1,11 +1,11 @@
 package helper
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -17,20 +17,23 @@ func Logger() *logrus.Logger {
 		logFilePath = dir + "/logs/log"
 	}
 	if err := os.MkdirAll(logFilePath, 0777); err != nil {
-		fmt.Println(err.Error())
+		errors.Wrap(err, "创建日志失败")
+		return nil
 	}
 	logFileName := "gmt-" + now.Format("2006-01-02") + ".log"
 	//日志文件
 	fileName := path.Join(logFilePath, logFileName)
 	if _, err := os.Stat(fileName); err != nil {
 		if _, err := os.Create(fileName); err != nil {
-			fmt.Println(err.Error())
+			errors.Wrap(err, "创建日志文件失败")
+			return nil
 		}
 	}
 	//写入文件
 	src, err := os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 	if err != nil {
-		fmt.Println("err", err)
+		errors.Wrap(err, "写入日志失败")
+		return nil
 	}
 
 	//实例化
@@ -48,3 +51,5 @@ func Logger() *logrus.Logger {
 	})
 	return logger
 }
+
+var Log = Logger()

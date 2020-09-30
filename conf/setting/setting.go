@@ -1,19 +1,21 @@
 package setting
 
 import (
-	"fmt"
+	"gmt-go/helper"
 	"io/ioutil"
 	"os"
 	"time"
 
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
 //相应设置配置
 type Setting struct {
-	RunMode  string   `yaml:"runMode"`
-	Server   server   `yaml:"server"`
-	Database database `yaml:"database"`
+	RunMode     string      `yaml:"runMode"`
+	Server      server      `yaml:"server"`
+	Database    database    `yaml:"database"`
+	WeixinOauth weixinOauth `yaml:"weixinOauth"`
 }
 
 //服务配置
@@ -33,6 +35,12 @@ type database struct {
 }
 
 // 微信登陆
+type weixinOauth struct {
+	ServerUrl   string `yaml:"serverUrl"`
+	AccessKey   string `yaml:"accessKey"`
+	SecretKey   string `yaml:"secretKey"`
+	RedirectURL string `yaml:"redirectURL"`
+}
 
 var conf = &Setting{}
 
@@ -40,17 +48,17 @@ var conf = &Setting{}
 func InitSetting() {
 
 	env := os.Getenv("GO_ENV")
-	fmt.Println("读取当前环境" + env)
+	helper.Log.Info("读取当前环境" + env)
 	yamlFile, err := ioutil.ReadFile("etc/" + env + ".yaml")
 	if err != nil {
-		fmt.Println(err)
-		fmt.Println("获取错误处理")
+		errors.Wrap(err, "读取环境变量错误")
+		return
 	}
 
 	err = yaml.Unmarshal(yamlFile, conf)
 	if err != nil {
-		fmt.Println(err)
-		fmt.Println("获取错误处理")
+		errors.Wrap(err, "读取环境变量错误")
+		return
 	}
 }
 

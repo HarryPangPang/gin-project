@@ -1,20 +1,12 @@
 package controller
 
 import (
-	"gmt-go/helper"
 	model "gmt-go/model"
 
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
-
-var logger *logrus.Logger
-
-func init() {
-	logger = helper.Logger()
-}
 
 func Test(c *gin.Context) {
 	c.JSON(200, gin.H{

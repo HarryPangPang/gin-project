@@ -2,7 +2,9 @@ package middleware
 
 import (
 	"fmt"
+	"gmt-go/conf/setting"
 	"net/http"
+	"time"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
@@ -10,29 +12,29 @@ import (
 )
 
 // gin session key
-const KEY = "gmt-go"
+const KEY = "gmt-go-secrert"
 
 // 使用 Cookie 保存 session
 func EnableCookieSession() gin.HandlerFunc {
 	store := cookie.NewStore([]byte(KEY))
-	return sessions.Sessions("session", store)
+	return sessions.Sessions("gosession", store)
 }
 
-// session中间件
+// session验证中间件
 func AuthSessionMiddle() gin.HandlerFunc {
+	now := time.Now().Unix()
+	serverUrl := setting.Conf().WeixinOauth.ServerUrl
+	accessKey := setting.Conf().WeixinOauth.AccessKey
+	redirectURL := setting.Conf().WeixinOauth.RedirectURL
+	oauthRedirectURL := serverUrl + "/user/login" + "?accessKey=" + accessKey + "&redirectURL=" + redirectURL
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
-		sessionValue := session.Get("userId")
-		if sessionValue == nil {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"error": "Unauthorized",
-			})
-			c.Abort()
+		accessTokenExpire := session.Get("AccessTokenExpire")
+		accessTokenExpiresInt := accessTokenExpire.(int64)
+		if accessTokenExpire == nil || accessTokenExpiresInt < now {
+			c.Redirect(http.StatusMovedPermanently, oauthRedirectURL)
 			return
 		}
-		// 设置简单的变量
-		c.Set("userId", sessionValue.(uint))
-
 		c.Next()
 		return
 	}
