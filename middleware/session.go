@@ -17,7 +17,7 @@ const KEY = "gmt-go-secrert"
 // 使用 Cookie 保存 session
 func EnableCookieSession() gin.HandlerFunc {
 	store := cookie.NewStore([]byte(KEY))
-	return sessions.Sessions("gosession", store)
+	return sessions.Sessions("go-gmt-session", store)
 }
 
 // session验证中间件
@@ -30,17 +30,21 @@ func AuthSessionMiddle() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
 		accessTokenExpire := session.Get("AccessTokenExpire")
-		accessTokenExpiresInt := accessTokenExpire.(int64)
-		if accessTokenExpire == nil || accessTokenExpiresInt < now {
-			c.Redirect(http.StatusMovedPermanently, oauthRedirectURL)
-			return
+		if accessTokenExpire != nil {
+			accessTokenExpiresInt := accessTokenExpire.(int64)
+			if accessTokenExpiresInt < now {
+				session.Clear()
+				session.Save()
+				c.Redirect(http.StatusMovedPermanently, oauthRedirectURL)
+				return
+			}
 		}
 		c.Next()
 		return
 	}
 }
 
-// 注册和登陆时都需要保存seesion信息
+// 注册和登陆时都需要保存session信息
 func SaveAuthSession(c *gin.Context, id uint) {
 	session := sessions.Default(c)
 	session.Set("userId", id)

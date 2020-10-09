@@ -80,10 +80,10 @@ func Logout(c *gin.Context) {
 func UserPrivs(c *gin.Context) {
 	session := sessions.Default(c)
 	accessToken := session.Get("AccessToken").(string)
-	userPrivs := getUserPrivs(accessToken)
+	userPrivs := GetUserPrivs(accessToken)
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
-		"msg":  "退出成功",
+		"msg":  "获取用户权限成功",
 		"data": userPrivs,
 	})
 }
@@ -99,7 +99,7 @@ func GetUserInfo(c *gin.Context) {
 	userinfo["avatar"] = session.Get("avatar").(string)
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
-		"msg":  "获取用户信息",
+		"msg":  "获取用户信息成功",
 		"data": userinfo,
 	})
 }
@@ -175,7 +175,7 @@ func refreshCode2token(refreshToken string) Code2tokenRes {
 }
 
 // 获取菜单权限
-func getUserPrivs(accessToken string) []interface{} {
+func GetUserPrivs(accessToken string) []interface{} {
 	serverUrl := setting.Conf().WeixinOauth.ServerUrl
 	url := serverUrl + "/api/oauth/user/privs" + getSignedQuery(accessToken, 2)
 	resp, err := http.Get(url)
