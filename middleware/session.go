@@ -30,6 +30,7 @@ func AuthSessionMiddle() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
 		accessTokenExpire := session.Get("AccessTokenExpire")
+		path := c.Request.URL.Path
 		if accessTokenExpire != nil {
 			accessTokenExpiresInt := accessTokenExpire.(int64)
 			if accessTokenExpiresInt < now {
@@ -38,6 +39,16 @@ func AuthSessionMiddle() gin.HandlerFunc {
 				c.Redirect(http.StatusMovedPermanently, oauthRedirectURL)
 				return
 			}
+		}
+		if accessTokenExpire == nil {
+			if path == "/api/auth/login" {
+				c.Next()
+				return
+			}
+			session.Clear()
+			session.Save()
+			c.Redirect(http.StatusMovedPermanently, oauthRedirectURL)
+			return
 		}
 		c.Next()
 		return

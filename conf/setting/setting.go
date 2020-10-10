@@ -12,10 +12,11 @@ import (
 
 //相应设置配置
 type Setting struct {
-	RunMode     string      `yaml:"runMode"`
-	Server      server      `yaml:"server"`
-	Database    database    `yaml:"database"`
-	WeixinOauth weixinOauth `yaml:"weixinOauth"`
+	RunMode       string        `yaml:"runMode"`
+	Server        server        `yaml:"server"`
+	Database      database      `yaml:"database"`
+	DatabaseSlave databaseSlave `yaml:"databaseSlave"`
+	WeixinOauth   weixinOauth   `yaml:"weixinOauth"`
 }
 
 //服务配置
@@ -31,7 +32,15 @@ type database struct {
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
 	Host     string `yaml:"host"`
-	DBName   string `yaml:"dbname"`
+	DBName   string `yaml:"dbName"`
+}
+
+type databaseSlave struct {
+	Type     string `yaml:"type"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	Host     string `yaml:"host"`
+	DBName   string `yaml:"dbName"`
 }
 
 // 微信登陆

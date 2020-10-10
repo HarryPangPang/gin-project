@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+type MentItem struct {
+	GameId  string   `json:"gameId"`
+	MenuIds []string `json:"menuIds"`
+}
+
 func String2Map(str string) map[string]interface{} {
 
 	in := []byte(str)
@@ -28,17 +33,34 @@ func JsonParse(str string) map[string]interface{} {
 	return result
 }
 
-// 获取权限游戏列表
-func GetGameList(privs []interface{}) []interface{} {
+func existGameIdItem(games []MentItem, gameId string) int {
+	for i := 0; i < len(games); i++ {
+		if games[i].GameId == gameId {
+			return i + 1
+		}
+	}
+	return 0
+}
+
+// 获取权限列表
+func GetGameList(privs []interface{}) []MentItem {
 	var i int
-	acc := make([]interface{}, 0)
+	acc := make([]MentItem, 0)
 	for i = 0; i < len(privs); i++ {
 		name := privs[i].(map[string]interface{})
 		n := name["name"].(string)
 		matched, _ := regexp.MatchString(`[\d]-[\d]-*`, n)
 		if matched {
 			nList := strings.Split(n, "-")
-			acc = append(acc, nList)
+			var menuIds []string
+			menuIds = append(menuIds, nList[1])
+			menu := MentItem{nList[0], menuIds}
+			existIndex := existGameIdItem(acc, nList[0])
+			if existIndex != 0 {
+				acc[existIndex-1].MenuIds = append(acc[existIndex-1].MenuIds, nList[1])
+			} else {
+				acc = append(acc, menu)
+			}
 		}
 	}
 	return acc

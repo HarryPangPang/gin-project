@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"gmt-go/conf/setting"
 	"gmt-go/helper"
 	"io/ioutil"
@@ -80,7 +81,7 @@ func Logout(c *gin.Context) {
 func UserPrivs(c *gin.Context) {
 	session := sessions.Default(c)
 	accessToken := session.Get("AccessToken").(string)
-	userPrivs := GetUserPrivs(accessToken)
+	userPrivs := GetUserPrivs(c, accessToken)
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
 		"msg":  "获取用户权限成功",
@@ -175,8 +176,11 @@ func refreshCode2token(refreshToken string) Code2tokenRes {
 }
 
 // 获取菜单权限
-func GetUserPrivs(accessToken string) []interface{} {
+func GetUserPrivs(c *gin.Context, accessToken string) []interface{} {
 	serverUrl := setting.Conf().WeixinOauth.ServerUrl
+	accessKey := setting.Conf().WeixinOauth.AccessKey
+	redirectURL := setting.Conf().WeixinOauth.RedirectURL
+	oauthRedirectURL := serverUrl + "/user/login" + "?accessKey=" + accessKey + "&redirectURL=" + redirectURL
 	url := serverUrl + "/api/oauth/user/privs" + getSignedQuery(accessToken, 2)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -187,6 +191,28 @@ func GetUserPrivs(accessToken string) []interface{} {
 		errors.Wrap(err, "getUserPrivs读取失败")
 	}
 	res := helper.String2Map(string(content))
-	data := res["data"].([]interface{})
+	// FIXME: 这里有问题，会出现未登录也不跳转登陆的情况
+	var data []interface{}
+	if res["data"] != nil {
+		data = res["data"].([]interface{})
+	} else {
+		fmt.Println(oauthRedirectURL)
+	}
+
 	return data
+}
+
+// 获取游戏菜单权限
+func GetAllAvaliableGames(c *gin.Context) {
+	session := sessions.Default(c)
+	accessToken := session.Get("AccessToken").(string)
+	userPrivs := GetUserPrivs(c, accessToken)
+
+	acc := helper.GetGameList(userPrivs)
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"msg":  "获取游戏权限成功",
+		"data": &acc,
+	})
 }

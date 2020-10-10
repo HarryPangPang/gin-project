@@ -30,5 +30,6 @@ func Setup() {
 
 // 自动迁移
 func AutoMigrate() {
-	DB.AutoMigrate(&User{})
+	// DB.AutoMigrate(&User{})
+	fmt.Println("数据库连接完成")
 }
