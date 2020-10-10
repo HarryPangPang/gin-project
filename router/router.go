@@ -3,10 +3,12 @@ package router
 import (
 	"gmt-go/controller"
 	"gmt-go/middleware"
+	"log"
 
 	"github.com/gin-gonic/gin"
 )
 
+// SetupRouter 设置路由
 func SetupRouter() *gin.Engine {
 	g := gin.New()
 	g.Use(middleware.LoggerToFile())
@@ -14,11 +16,6 @@ func SetupRouter() *gin.Engine {
 
 	api := g.Group("/api", middleware.EnableCookieSession())
 	{
-		user := api.Group("/user")
-		{
-			user.POST("/insert", controller.AddUser)
-			user.GET("/query", controller.GetUser)
-		}
 
 		auth := api.Group("/auth", middleware.AuthSessionMiddle())
 		{
@@ -29,10 +26,11 @@ func SetupRouter() *gin.Engine {
 			auth.GET("/menu", controller.GetAllAvaliableGames)
 		}
 
-		game := api.Group("/game", middleware.AuthSessionMiddle())
+		game := api.Group("/game")
 		{
 			game.GET("/game", controller.GetAllGames)
 		}
 	}
+	log.Println("路由初始化完成")
 	return g
 }

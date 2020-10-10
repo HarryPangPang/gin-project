@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"fmt"
 	"gmt-go/conf/setting"
+	"log"
 	"net/http"
 	"time"
 
@@ -11,26 +11,28 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// gin session key
+// KEY gin session key
 const KEY = "gmt-go-secrert"
 
-// 使用 Cookie 保存 session
+//EnableCookieSession 使用 Cookie 保存 session
 func EnableCookieSession() gin.HandlerFunc {
 	store := cookie.NewStore([]byte(KEY))
 	return sessions.Sessions("go-gmt-session", store)
 }
 
-// session验证中间件
+//AuthSessionMiddle session验证中间件
 func AuthSessionMiddle() gin.HandlerFunc {
 	now := time.Now().Unix()
-	serverUrl := setting.Conf().WeixinOauth.ServerUrl
+	serverURL := setting.Conf().WeixinOauth.ServerUrl
 	accessKey := setting.Conf().WeixinOauth.AccessKey
 	redirectURL := setting.Conf().WeixinOauth.RedirectURL
-	oauthRedirectURL := serverUrl + "/user/login" + "?accessKey=" + accessKey + "&redirectURL=" + redirectURL
+	oauthRedirectURL := serverURL + "/user/login" + "?accessKey=" + accessKey + "&redirectURL=" + redirectURL
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
 		accessTokenExpire := session.Get("AccessTokenExpire")
 		path := c.Request.URL.Path
+		log.Println(accessTokenExpire)
+		log.Println(accessTokenExpire.(int64))
 		if accessTokenExpire != nil {
 			accessTokenExpiresInt := accessTokenExpire.(int64)
 			if accessTokenExpiresInt < now {
@@ -55,14 +57,14 @@ func AuthSessionMiddle() gin.HandlerFunc {
 	}
 }
 
-// 注册和登陆时都需要保存session信息
+//SaveAuthSession 注册和登陆时都需要保存session信息
 func SaveAuthSession(c *gin.Context, id uint) {
 	session := sessions.Default(c)
 	session.Set("userId", id)
 	session.Save()
 }
 
-// 退出时清除session
+//ClearAuthSession 退出时清除session
 func ClearAuthSession(c *gin.Context) {
 	session := sessions.Default(c)
 	session.Clear()
@@ -92,7 +94,7 @@ func GetUserSession(c *gin.Context) map[string]interface{} {
 	userName := ""
 	if hasSession {
 		userId := GetSessionUserId(c)
-		fmt.Println(userId)
+		log.Println(userId)
 		// userName = models.UserDetail(userId).Name
 	}
 	data := make(map[string]interface{})

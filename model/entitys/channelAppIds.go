@@ -1,20 +1,12 @@
-package model
+package entitys
 
-import (
-	"gorm.io/gorm"
-)
+import "time"
 
-type User struct {
-	gorm.Model
-	GameName      string `form:"gameName" json:"gameName"`
-	alias         string `form:"alias" json:"alias"`
-	gmId          string `form:"email" json:"email" binding:"required,email"`
-	bbxRegion     string `form:"gender" json:"gender"`
-	url           string `form:"gameName" json:"gameName" binding:"required"`
-	imUrl         string `form:"alias" json:"alias" binding:"required"`
-	accessType    int    `form:"email" json:"email" binding:"required,email"`
-	apiSecret     string `form:"gender" json:"gender"`
-	isAutoGetData int    `form:"gender" json:"gender"`
-	sdk           string `form:"gender" json:"gender"`
-	unisdk        string `form:"gender" json:"gender"`
+// ChannelAppIds 游戏和channelappId对应表
+type ChannelAppIds struct {
+	ID           int64     `xorm:"not null INT(10) pk autoincr"`
+	GameID       int       `xorm:"not null UNSIGNED INT(10)"`
+	Name         string    `xorm:"not null VARCHAR(128)"`
+	ChannelAppID int       `xorm:"not null INT(10)"`
+	LastModified time.Time `xorm:"updated not null"`
 }

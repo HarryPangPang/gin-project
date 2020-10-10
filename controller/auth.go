@@ -2,10 +2,10 @@ package controller
 
 import (
 	"encoding/json"
-	"fmt"
 	"gmt-go/conf/setting"
 	"gmt-go/helper"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -16,23 +16,27 @@ import (
 )
 
 type code2tokenForm struct {
-	appId     string
+	appID     string
 	timestamp int
 	code      string
 }
 
+// TokenData 返回的所有token数据
 type TokenData struct {
-	AccessToken        string `json: "accessToken"`
-	AccessTokenExpire  int64  `json: "accessTokenExpire"`
-	RefreshToken       string `json: "refreshToken"`
-	RefreshTokenExpire int64  `json: "refreshTokenExpire"`
-}
-type Code2tokenRes struct {
-	Result int       `json: "result"`
-	Msg    string    `json: "msg"`
-	Data   TokenData `json: "data"`
+	AccessToken        string `json:"accessToken"`
+	AccessTokenExpire  int64  `json:"accessTokenExpire"`
+	RefreshToken       string `json:"refreshToken"`
+	RefreshTokenExpire int64  `json:"refreshTokenExpire"`
 }
 
+// Code2tokenRes 返回结果
+type Code2tokenRes struct {
+	Result int       `json:"result"`
+	Msg    string    `json:"msg"`
+	Data   TokenData `json:"data"`
+}
+
+// TokenType token类型枚举
 type TokenType int
 
 const (
@@ -41,7 +45,7 @@ const (
 	accessToken  TokenType = 2 //获取用户名，权限
 )
 
-// 登陆
+// Login 登陆
 func Login(c *gin.Context) {
 	code := c.Query("code")
 	respBody := code2token(code)
@@ -65,7 +69,7 @@ func Login(c *gin.Context) {
 	})
 }
 
-// 登出
+//Logout 登出
 func Logout(c *gin.Context) {
 	session := sessions.Default(c)
 	session.Clear()
@@ -77,7 +81,7 @@ func Logout(c *gin.Context) {
 	})
 }
 
-// 用户权限
+//UserPrivs 用户权限
 func UserPrivs(c *gin.Context) {
 	session := sessions.Default(c)
 	accessToken := session.Get("AccessToken").(string)
@@ -89,7 +93,7 @@ func UserPrivs(c *gin.Context) {
 	})
 }
 
-// 用户信息
+//GetUserInfo 用户信息
 func GetUserInfo(c *gin.Context) {
 	session := sessions.Default(c)
 	userinfo := make(map[string]string)
@@ -107,14 +111,14 @@ func GetUserInfo(c *gin.Context) {
 
 func getSignedQuery(token string, tokenType TokenType) string {
 	secretKey := setting.Conf().WeixinOauth.SecretKey
-	appId := setting.Conf().WeixinOauth.AccessKey
+	appID := setting.Conf().WeixinOauth.AccessKey
 	timestamp := time.Now().Unix()
-	paramStr := "appId=" + appId + "&code=" + token + "&timestamp=" + strconv.FormatInt(timestamp, 10)
+	paramStr := "appId=" + appID + "&code=" + token + "&timestamp=" + strconv.FormatInt(timestamp, 10)
 	switch tokenType {
 	case 1:
-		paramStr = "accessToken=" + token + "&appId=" + appId + "&timestamp=" + strconv.FormatInt(timestamp, 10)
+		paramStr = "accessToken=" + token + "&appId=" + appID + "&timestamp=" + strconv.FormatInt(timestamp, 10)
 	case 2:
-		paramStr = "accessToken=" + token + "&appId=" + appId + "&timestamp=" + strconv.FormatInt(timestamp, 10)
+		paramStr = "accessToken=" + token + "&appId=" + appID + "&timestamp=" + strconv.FormatInt(timestamp, 10)
 	}
 	queryString := "?" + paramStr + "&signature=" + helper.Md5Decode(paramStr+secretKey)
 	return queryString
@@ -122,8 +126,8 @@ func getSignedQuery(token string, tokenType TokenType) string {
 
 // token换取用户信息
 func token2userinfo(accessToken string) map[string]interface{} {
-	serverUrl := setting.Conf().WeixinOauth.ServerUrl
-	url := serverUrl + "/api/oauth/user/info" + getSignedQuery(accessToken, 2)
+	serverURL := setting.Conf().WeixinOauth.ServerUrl
+	url := serverURL + "/api/oauth/user/info" + getSignedQuery(accessToken, 2)
 	resp, err := http.Get(url)
 	if err != nil {
 		errors.Wrap(err, "请求/api/oauth/user/info失败")
@@ -139,9 +143,9 @@ func token2userinfo(accessToken string) map[string]interface{} {
 
 // 获取token
 func code2token(token string) TokenData {
-	serverUrl := setting.Conf().WeixinOauth.ServerUrl
+	serverURL := setting.Conf().WeixinOauth.ServerUrl
 	now := time.Now().Unix()
-	url := serverUrl + "/api/oauth/code2token" + getSignedQuery(token, 0)
+	url := serverURL + "/api/oauth/code2token" + getSignedQuery(token, 0)
 	resp, err := http.Get(url)
 	if err != nil {
 		errors.Wrap(err, "请求/oauth/code2token失败")
@@ -160,8 +164,8 @@ func code2token(token string) TokenData {
 
 // 更新token
 func refreshCode2token(refreshToken string) Code2tokenRes {
-	serverUrl := setting.Conf().WeixinOauth.ServerUrl
-	url := serverUrl + "/api/oauth/refreshToken" + getSignedQuery(refreshToken, 1)
+	serverURL := setting.Conf().WeixinOauth.ServerUrl
+	url := serverURL + "/api/oauth/refreshToken" + getSignedQuery(refreshToken, 1)
 	resp, err := http.Get(url)
 	if err != nil {
 		errors.Wrap(err, "请求/oauth/refreshToken失败")
@@ -175,13 +179,13 @@ func refreshCode2token(refreshToken string) Code2tokenRes {
 	return code2tokenRes
 }
 
-// 获取菜单权限
+//GetUserPrivs 获取菜单权限
 func GetUserPrivs(c *gin.Context, accessToken string) []interface{} {
-	serverUrl := setting.Conf().WeixinOauth.ServerUrl
+	serverURL := setting.Conf().WeixinOauth.ServerUrl
 	accessKey := setting.Conf().WeixinOauth.AccessKey
 	redirectURL := setting.Conf().WeixinOauth.RedirectURL
-	oauthRedirectURL := serverUrl + "/user/login" + "?accessKey=" + accessKey + "&redirectURL=" + redirectURL
-	url := serverUrl + "/api/oauth/user/privs" + getSignedQuery(accessToken, 2)
+	oauthRedirectURL := serverURL + "/user/login" + "?accessKey=" + accessKey + "&redirectURL=" + redirectURL
+	url := serverURL + "/api/oauth/user/privs" + getSignedQuery(accessToken, 2)
 	resp, err := http.Get(url)
 	if err != nil {
 		errors.Wrap(err, "请求/oauth/user/privs失败")
@@ -196,13 +200,13 @@ func GetUserPrivs(c *gin.Context, accessToken string) []interface{} {
 	if res["data"] != nil {
 		data = res["data"].([]interface{})
 	} else {
-		fmt.Println(oauthRedirectURL)
+		log.Println(oauthRedirectURL)
 	}
 
 	return data
 }
 
-// 获取游戏菜单权限
+//GetAllAvaliableGames 获取游戏菜单权限
 func GetAllAvaliableGames(c *gin.Context) {
 	session := sessions.Default(c)
 	accessToken := session.Get("AccessToken").(string)

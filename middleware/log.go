@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"bytes"
-	"fmt"
 	"gmt-go/helper"
+	"log"
 	"net/http"
 	"os"
 	"path"
@@ -20,10 +20,10 @@ type bodyLogWriter struct {
 	body *bytes.Buffer
 }
 
-var logs *logrus.Logger
+var logger *logrus.Logger
 
 func init() {
-	logs = helper.Logger()
+	logger = helper.Logger()
 }
 
 func (w bodyLogWriter) Write(b []byte) (int, error) {
@@ -44,7 +44,7 @@ func LoggerToFile() gin.HandlerFunc {
 	// 写入文件
 	src, err := os.OpenFile(fileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
-		fmt.Println("err", err)
+		log.Println("err", err)
 	}
 
 	// 实例化
@@ -101,7 +101,7 @@ func LoggerToFile() gin.HandlerFunc {
 					"msg":  errorToString(r),
 					"data": nil,
 				})
-				logs.Error("Error:", r)
+				logger.Errorln("Error:", r)
 				//终止后续接口调用，不加的话recover到异常后，还会继续执行接口里后续代码
 				ctx.Abort()
 			}

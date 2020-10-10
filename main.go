@@ -2,13 +2,15 @@ package main
 
 import (
 	"gmt-go/conf/setting"
+	"gmt-go/model"
 	"gmt-go/router"
 	"strconv"
 )
 
 func init() {
 	setting.InitSetting()
-	// models.Setup()
+	model.Init()
+	// model.Setup()
 }
 
 func main() {
