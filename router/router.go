@@ -19,14 +19,16 @@ func SetupRouter() *gin.Engine {
 
 		auth := api.Group("/auth", middleware.AuthSessionMiddle())
 		{
-			auth.GET("/userprivs", controller.UserPrivs)
+			auth.GET("/privs", controller.UserPrivs)
 			auth.GET("/userinfo", controller.GetUserInfo)
 			auth.GET("/login", controller.Login)
 			auth.GET("/logout", controller.Logout)
 			auth.GET("/menu", controller.GetAllAvaliableGames)
+			auth.GET("/setlang", controller.SetLang)
+			auth.GET("/getlang", controller.GetLang)
 		}
 
-		game := api.Group("/game")
+		game := api.Group("/game", middleware.AuthSessionMiddle())
 		{
 			game.GET("/game", controller.GetAllGames)
 		}

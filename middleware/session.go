@@ -31,8 +31,7 @@ func AuthSessionMiddle() gin.HandlerFunc {
 		session := sessions.Default(c)
 		accessTokenExpire := session.Get("AccessTokenExpire")
 		path := c.Request.URL.Path
-		log.Println(accessTokenExpire)
-		log.Println(accessTokenExpire.(int64))
+		log.Println("accessTokenExpire", accessTokenExpire)
 		if accessTokenExpire != nil {
 			accessTokenExpiresInt := accessTokenExpire.(int64)
 			if accessTokenExpiresInt < now {

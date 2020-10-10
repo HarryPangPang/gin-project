@@ -3,23 +3,13 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
-	"gmt-go/helper"
 	servicegame "gmt-go/service/game"
 	"net/http"
 	"strings"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 )
-
-var (
-	logger *logrus.Logger
-)
-
-func init() {
-	logger = helper.Logger()
-}
 
 // GetAllGames 获取游戏
 func GetAllGames(c *gin.Context) {
@@ -30,7 +20,7 @@ func GetAllGames(c *gin.Context) {
 		res := make(map[string]interface{}, 0)
 		if err := json.Unmarshal([]byte(strSessionGame), &res); err != nil {
 			logger.Errorln(err)
-			c.JSON(http.StatusBadGateway, gin.H{
+			c.JSON(http.StatusInternalServerError, gin.H{
 				"code": 1,
 				"msg":  "获取游戏session失败",
 				"data": string(err.Error()),
